@@ -841,7 +841,19 @@ function useGenPassword() {
   if (pw) document.getElementById('addPassword').value = pw;
 }
 
-// ---- 事件绑定 ----
+// ---- 添加记录弹窗 ----
+function showAddModal() {
+  document.getElementById('addSite').value = '';
+  document.getElementById('addAccount').value = '';
+  document.getElementById('addPassword').value = '';
+  document.getElementById('addError').textContent = '';
+  document.getElementById('genPanel').style.display = 'none';
+  document.getElementById('addModal').style.display = 'flex';
+}
+
+function hideAddModal() {
+  document.getElementById('addModal').style.display = 'none';
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   // 主密码锁屏初始化
@@ -857,13 +869,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.getElementById('searchInput').addEventListener('input', render);
 
-  document.getElementById('addBtn').addEventListener('click', function () {
+  // 添加记录
+  document.getElementById('addEntryBtn').addEventListener('click', showAddModal);
+  document.getElementById('addConfirm').addEventListener('click', function () {
     var site    = document.getElementById('addSite').value.trim();
     var account = document.getElementById('addAccount').value.trim();
     var password = document.getElementById('addPassword').value.trim();
+    var error = document.getElementById('addError');
 
     if (!account || !password) {
-      alert('账号和密码不能为空');
+      error.textContent = '账号和密码不能为空';
       return;
     }
 
@@ -875,11 +890,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     save();
     render();
-
-    document.getElementById('addSite').value = '';
-    document.getElementById('addAccount').value = '';
-    document.getElementById('addPassword').value = '';
+    hideAddModal();
+    showToast('已添加');
   });
+  document.getElementById('addCancel').addEventListener('click', hideAddModal);
 
   document.getElementById('clearBtn').addEventListener('click', function () {
     if (!confirm('确定清空所有记录？此操作不可恢复。')) return;

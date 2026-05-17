@@ -43,10 +43,33 @@ body {
 
 /* 工具栏 */
 .toolbar {
-  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
-  padding: 16px 18px; background: var(--card-bg); border-radius: var(--radius);
-  box-shadow: var(--shadow); align-items: center;
+  display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+  padding: 14px 16px; background: var(--card-bg); border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
+
+.toolbar-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.toolbar-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px; padding: 7px 10px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: .76rem; font-weight: 600; cursor: pointer;
+  transition: all var(--transition); white-space: nowrap;
+  background: var(--card-bg); color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+.toolbar-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.toolbar-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #fff; border-color: transparent;
+}
+.toolbar-btn-primary:hover { background: linear-gradient(135deg, #4f46e5, #6d28d9); color: #fff; }
+.toolbar-btn-danger { color: var(--danger); border-color: rgba(244,63,94,.25); }
+.toolbar-btn-danger:hover { background: var(--danger-light); border-color: var(--danger); }
 
 /* 按钮 */
 .btn {
@@ -150,33 +173,6 @@ body {
 .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .5; }
 .empty-state p { font-size: .9rem; }
 
-/* 手动添加表单 */
-.add-form {
-  background: var(--card-bg); padding: 20px 22px;
-  border-radius: var(--radius); box-shadow: var(--shadow);
-}
-.add-form h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
-
-.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
-.form-group { display: flex; flex-direction: column; gap: 4px; }
-.form-group label {
-  font-size: .72rem; font-weight: 700; color: var(--text-secondary);
-  text-transform: uppercase; letter-spacing: 0.05em;
-}
-.form-group input {
-  padding: 9px 12px; border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm); font-size: .875rem; outline: none;
-  transition: all var(--transition);
-}
-.form-group input:focus {
-  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.1);
-}
-
-.site-input    { flex: 2; min-width: 150px; }
-.account-input { flex: 2; min-width: 130px; }
-.password-input { flex: 2; min-width: 130px; }
-.add-btn       { align-self: end; }
-
 /* 密码生成器面板 */
 .gen-panel {
   margin-top: 12px; padding: 16px;
@@ -261,9 +257,11 @@ body {
 /* 响应式 */
 @media (max-width: 640px) {
   body { padding: 12px; }
-  .toolbar { flex-direction: column; align-items: stretch; }
-  .form-row { flex-direction: column; }
+  .toolbar-actions { grid-template-columns: repeat(3, 1fr); }
   .pw-card { flex-wrap: wrap; padding: 14px 16px; gap: 10px; }
   .card-actions { width: 100%; justify-content: flex-end; }
   .card-meta { flex-direction: column; gap: 2px; }
+}
+@media (max-width: 400px) {
+  .toolbar-actions { grid-template-columns: repeat(2, 1fr); }
 }
