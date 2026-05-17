@@ -350,11 +350,11 @@ function render() {
           '</div>' +
         '</div>' +
         '<div class="card-actions">' +
-          '<button class="btn-sm" onclick="showEditModal(' + realIdx + ')">✏️</button>' +
-          '<button class="btn-sm" onclick="togglePw(' + realIdx + ')" id="btn-toggle-' + realIdx + '">👁</button>' +
-          '<button class="btn-sm" onclick="copyText(\'' + escJs(e.account) + '\')">📋 号</button>' +
-          '<button class="btn-sm" onclick="copyText(\'' + escJs(e.password) + '\')">📋 密</button>' +
-          '<button class="btn-sm" style="color:var(--danger);" onclick="delEntry(' + realIdx + ')">✕</button>' +
+          '<button class="btn-sm" onclick="showEditModal(' + realIdx + ')">&#9998;&#65039;</button>' +
+          '<button class="btn-sm" onclick="togglePw(' + realIdx + ')" id="btn-toggle-' + realIdx + '">&#128065;</button>' +
+          '<button class="btn-sm" onclick="copyText(\'' + escJs(e.account) + '\')">&#128100;</button>' +
+          '<button class="btn-sm" onclick="copyText(\'' + escJs(e.password) + '\')">&#128274;</button>' +
+          '<button class="btn-sm" style="color:var(--danger);" onclick="delEntry(' + realIdx + ')">&#10060;</button>' +
         '</div>' +
       '</div>';
     }).join('');
