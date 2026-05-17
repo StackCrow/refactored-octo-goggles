@@ -258,11 +258,9 @@ body {
 /* 底部标签栏 */
 .tab-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
-  height: var(--tab-height);
+  height: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
   background: var(--card-bg); border-top: 1px solid var(--border);
   display: flex; z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-sizing: content-box;
   touch-action: manipulation;
 }
 .tab-btn {
@@ -271,7 +269,7 @@ body {
   color: var(--text-secondary); cursor: pointer;
   transition: all var(--transition);
   -webkit-tap-highlight-color: transparent;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-bottom, 0px);
   touch-action: manipulation;
 }
 .tab-btn.active { color: var(--primary); }
