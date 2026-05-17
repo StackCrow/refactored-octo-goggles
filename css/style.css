@@ -133,10 +133,10 @@ body {
 }
 
 .card-site-icon {
-  width: 26px; height: 26px; border-radius: 6px;
-  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  width: 22px; height: 22px; border-radius: 5px;
+  background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
   color: #fff; display: flex; align-items: center; justify-content: center;
-  font-size: .75rem; font-weight: 700; flex-shrink: 0;
+  font-size: .65rem; font-weight: 700; flex-shrink: 0;
 }
 
 .card-meta {
@@ -266,8 +266,8 @@ body {
   touch-action: manipulation;
 }
 .tab-btn {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
-  border: none; background: none; font-size: .85rem; font-weight: 600;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: none; background: none; font-size: .75rem; font-weight: 600;
   color: var(--text-secondary); cursor: pointer;
   transition: all var(--transition);
   -webkit-tap-highlight-color: transparent;
@@ -275,6 +275,8 @@ body {
   touch-action: manipulation;
 }
 .tab-btn.active { color: var(--primary); }
+.tab-icon { font-size: 1.2rem; line-height: 1; }
+.tab-label { font-size: .65rem; }
 
 /* 设置页面 */
 .settings-list {
