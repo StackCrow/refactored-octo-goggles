@@ -269,7 +269,6 @@ body {
   color: var(--text-secondary); cursor: pointer;
   transition: all var(--transition);
   -webkit-tap-highlight-color: transparent;
-  padding-top: env(safe-area-inset-bottom, 0px);
   touch-action: manipulation;
 }
 .tab-btn.active { color: var(--primary); }
