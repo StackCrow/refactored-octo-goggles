@@ -108,6 +108,7 @@ function initLock() {
   var timerEl = document.getElementById('lockTimer');
 
   overlay.style.display = 'flex';
+  document.getElementById('changePwBtn').style.display = 'none';
 
   if (hasMasterPw()) {
     // 已有主密码 → 解锁模式
@@ -222,10 +223,12 @@ async function doSetup() {
 
 function unlock() {
   document.getElementById('lockOverlay').style.display = 'none';
+  document.getElementById('changePwBtn').style.display = '';
 }
 
 function lock() {
   document.getElementById('lockOverlay').style.display = 'flex';
+  document.getElementById('changePwBtn').style.display = 'none';
   failCount = 0;
   initLock();
 }
@@ -298,6 +301,79 @@ function save() {
   if (isServerMode()) {
     fetch('/api/data', { method: 'POST', body: json }).catch(function () {});
   }
+}
+
+// ---- TXT 解析 ----
+
+/**
+ * 解析一行文本，自动识别分隔符
+ * 支持格式：
+ *   网站,账号,密码  /  账号,密码
+ *   网站：账号：密码  /  账号：密码
+ *   网站 账号 密码    /  账号 密码
+ *   制表符分隔
+ */
+function parseLine(line) {
+  line = line.trim();
+  if (!line) return null;
+
+  var parts;
+
+  // 逗号分隔（半角/全角）
+  if (line.includes(',')) {
+    parts = line.split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  } else if (line.includes('，')) {
+    parts = line.split('，').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  }
+  // 全角/半角冒号
+  else if (line.includes('：') || line.includes(':')) {
+    parts = line.split(/[：:]/).map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  }
+  // Tab 分隔
+  else if (line.includes('\t')) {
+    parts = line.split('\t').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  }
+  // 空格分隔
+  else {
+    parts = line.split(/\s+/).filter(function (s) { return s; });
+  }
+
+  if (!parts || parts.length < 2) return null;
+
+  if (parts.length >= 3) {
+    // 网站 ... 密码（中间部分合并为账号）
+    return {
+      site: parts[0],
+      account: parts.slice(0, -1).join(' '),
+      password: parts[parts.length - 1]
+    };
+  }
+  // 只有两列 → 账号,密码
+  return { site: '', account: parts[0], password: parts[1] };
+}
+
+function handleFile(file) {
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var lines = e.target.result.split(/\r?\n/);
+    var added = 0;
+    lines.forEach(function (line) {
+      var parsed = parseLine(line);
+      if (parsed) {
+        entries.push({
+          id: Date.now() + Math.random(),
+          site: parsed.site,
+          account: parsed.account,
+          password: parsed.password
+        });
+        added++;
+      }
+    });
+    save();
+    render();
+    alert('成功导入 ' + added + ' 条记录');
+  };
+  reader.readAsText(file);
 }
 
 // ---- 渲染 ----
@@ -765,47 +841,29 @@ function useGenPassword() {
   if (pw) document.getElementById('addPassword').value = pw;
 }
 
-// ---- 添加记录弹窗 ----
-function showAddModal() {
-  document.getElementById('addSite').value = '';
-  document.getElementById('addAccount').value = '';
-  document.getElementById('addPassword').value = '';
-  document.getElementById('addError').textContent = '';
-  document.getElementById('genPanel').style.display = 'none';
-  document.getElementById('addModal').style.display = 'flex';
-}
-
-function hideAddModal() {
-  document.getElementById('addModal').style.display = 'none';
-}
+// ---- 事件绑定 ----
 
 document.addEventListener('DOMContentLoaded', function () {
+  // 主密码锁屏初始化
   initLock();
 
-  // 底部标签切换
-  document.querySelectorAll('.tab-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-      this.classList.add('active');
-      var tab = this.getAttribute('data-tab');
-      document.getElementById('tabPasswords').style.display = tab === 'passwords' ? '' : 'none';
-      document.getElementById('tabSettings').style.display = tab === 'settings' ? '' : 'none';
-      document.getElementById('fabAdd').style.display = tab === 'passwords' ? '' : 'none';
-    });
+  // 文件导入
+  document.getElementById('fileInput').addEventListener('change', function () {
+    if (this.files.length > 0) {
+      handleFile(this.files[0]);
+      this.value = '';
+    }
   });
 
   document.getElementById('searchInput').addEventListener('input', render);
 
-  // 浮动按钮添加记录
-  document.getElementById('fabAdd').addEventListener('click', showAddModal);
-  document.getElementById('addConfirm').addEventListener('click', function () {
+  document.getElementById('addBtn').addEventListener('click', function () {
     var site    = document.getElementById('addSite').value.trim();
     var account = document.getElementById('addAccount').value.trim();
     var password = document.getElementById('addPassword').value.trim();
-    var error = document.getElementById('addError');
 
     if (!account || !password) {
-      error.textContent = '账号和密码不能为空';
+      alert('账号和密码不能为空');
       return;
     }
 
@@ -817,10 +875,18 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     save();
     render();
-    hideAddModal();
-    showToast('已添加');
+
+    document.getElementById('addSite').value = '';
+    document.getElementById('addAccount').value = '';
+    document.getElementById('addPassword').value = '';
   });
-  document.getElementById('addCancel').addEventListener('click', hideAddModal);
+
+  document.getElementById('clearBtn').addEventListener('click', function () {
+    if (!confirm('确定清空所有记录？此操作不可恢复。')) return;
+    entries = [];
+    save();
+    render();
+  });
 
   // 密码生成器
   document.getElementById('genBtn').addEventListener('click', showGenPanel);
@@ -834,8 +900,8 @@ document.addEventListener('DOMContentLoaded', function () {
     generatePassword();
   });
 
-  // 设置页 - 修改主密码
-  document.getElementById('settingsChangePw').addEventListener('click', showChangePwModal);
+  // 修改主密码
+  document.getElementById('changePwBtn').addEventListener('click', showChangePwModal);
   document.getElementById('changePwConfirm').addEventListener('click', handleChangePw);
   document.getElementById('changePwCancel').addEventListener('click', hideChangePwModal);
 
@@ -844,12 +910,12 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('editCancel').addEventListener('click', hideEditModal);
   document.getElementById('genEditPwBtn').addEventListener('click', genEditPassword);
 
-  // 设置页 - 导出/导入
-  document.getElementById('settingsExport').addEventListener('click', function () {
+  // 导出/导入
+  document.getElementById('exportBtn').addEventListener('click', function () {
     if (entries.length === 0) { alert('没有可导出的数据'); return; }
     showCryptoModal('export');
   });
-  document.getElementById('settingsImport').addEventListener('click', function () {
+  document.getElementById('importBtn').addEventListener('click', function () {
     document.getElementById('importEncFile').click();
   });
   document.getElementById('importEncFile').addEventListener('change', function () {
@@ -861,15 +927,6 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   document.getElementById('cryptoPwConfirm').addEventListener('click', handleCryptoConfirm);
   document.getElementById('cryptoPwCancel').addEventListener('click', hideCryptoModal);
-
-  // 设置页 - 清空数据
-  document.getElementById('settingsClear').addEventListener('click', function () {
-    if (!confirm('确定清空所有记录？此操作不可恢复。')) return;
-    entries = [];
-    save();
-    render();
-    showToast('已清空');
-  });
 
   // 多选
   document.getElementById('selectAll').addEventListener('change', function () {
