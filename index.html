@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>密码管理器</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="密码管理器">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 主密码锁屏 -->
+  <div class="lock-overlay" id="lockOverlay">
+    <div class="lock-card">
+      <h2 id="lockTitle">🔐 密码管理器</h2>
+      <p id="lockDesc"></p>
+      <div class="lock-form">
+        <input type="password" id="lockInput1" class="lock-input" placeholder="请输入主密码">
+        <input type="password" id="lockInput2" class="lock-input" placeholder="确认主密码" style="display:none;">
+        <button id="lockBtn" class="btn btn-primary lock-btn">确认</button>
+      </div>
+      <p class="lock-error" id="lockError"></p>
+      <p class="lock-timer" id="lockTimer"></p>
+    </div>
+  </div>
+
+  <!-- 修改主密码弹窗 -->
+  <div class="modal-overlay" id="changePwModal" style="display:none;">
+    <div class="modal-card">
+      <h3>修改主密码</h3>
+      <input type="password" id="oldPw" class="lock-input" placeholder="原主密码">
+      <input type="password" id="newPw1" class="lock-input" placeholder="新主密码">
+      <input type="password" id="newPw2" class="lock-input" placeholder="确认新密码">
+      <p class="lock-error" id="changePwError"></p>
+      <div class="modal-actions">
+        <button id="changePwConfirm" class="btn btn-primary">确认修改</button>
+        <button id="changePwCancel" class="btn btn-outline">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加密口令弹窗（导出/导入共用） -->
+  <div class="modal-overlay" id="cryptoPwModal" style="display:none;">
+    <div class="modal-card">
+      <h3 id="cryptoPwTitle">导出备份</h3>
+      <p id="cryptoPwDesc" style="font-size:.85rem;color:var(--text-secondary);"></p>
+      <input type="password" id="cryptoPw1" class="lock-input" placeholder="输入加密口令">
+      <input type="password" id="cryptoPw2" class="lock-input" placeholder="确认口令" style="display:none;">
+      <p class="lock-error" id="cryptoPwError"></p>
+      <div class="modal-actions">
+        <button id="cryptoPwConfirm" class="btn btn-primary">确认</button>
+        <button id="cryptoPwCancel" class="btn btn-outline">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑记录弹窗 -->
+  <div class="modal-overlay" id="editModal" style="display:none;">
+    <div class="modal-card">
+      <h3>编辑记录</h3>
+      <input type="text" id="editSite" class="lock-input" placeholder="网站/说明">
+      <input type="text" id="editAccount" class="lock-input" placeholder="账号">
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="editPassword" class="lock-input" placeholder="密码" style="flex:1;">
+        <button id="genEditPwBtn" class="btn btn-sm" type="button" style="white-space:nowrap;">🎲 生成</button>
+      </div>
+      <p class="lock-error" id="editError"></p>
+      <div class="modal-actions">
+        <button id="editConfirm" class="btn btn-primary">保存</button>
+        <button id="editCancel" class="btn btn-outline">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>🔐 密码管理器</h1>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="search-input" placeholder="搜索...">
+      <label for="fileInput" class="btn btn-primary" style="cursor:pointer;">📂 选择 TXT 文件</label>
+      <input type="file" id="fileInput" accept=".txt" style="display:none;">
+      <button id="clearBtn" class="btn btn-danger">🗑 清空全部</button>
+      <button id="changePwBtn" class="btn btn-outline" style="display:none;">🔑 修改主密码</button>
+      <span style="flex:1;"></span>
+      <button id="exportBtn" class="btn btn-outline">📤 导出备份</button>
+      <button id="importBtn" class="btn btn-outline">📥 导入备份</button>
+      <input type="file" id="importEncFile" accept=".enc" style="display:none;">
+    </div>
+
+    <!-- 密码卡片列表 -->
+    <div id="cardListHeader" style="display:none; align-items:center; gap:10px; padding:0 4px 8px;">
+      <label style="font-size:.8rem;font-weight:600;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="selectAll"> 全选
+      </label>
+    </div>
+    <div class="card-list" id="cardList"></div>
+    <p class="stats" id="stats"></p>
+
+    <!-- 批量操作栏 -->
+    <div class="batch-bar" id="batchBar" style="display:none;">
+      <span id="batchCount">已选 0 条</span>
+      <button id="batchDelBtn" class="btn btn-danger btn-sm">删除所选</button>
+    </div>
+
+    <!-- 手动添加 -->
+    <div class="add-form">
+      <h2>手动添加</h2>
+      <div class="form-row">
+        <div class="form-group site-input">
+          <label for="addSite">网站/说明</label>
+          <input type="text" id="addSite" placeholder="如：example.com">
+        </div>
+        <div class="form-group account-input">
+          <label for="addAccount">账号</label>
+          <input type="text" id="addAccount" placeholder="账号">
+        </div>
+        <div class="form-group password-input">
+          <label for="addPassword">密码</label>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="addPassword" placeholder="密码" style="flex:1;">
+            <button id="genBtn" class="btn btn-sm" type="button" style="white-space:nowrap;">🎲 生成</button>
+          </div>
+        </div>
+        <button id="addBtn" class="btn btn-primary add-btn">添加</button>
+      </div>
+
+      <!-- 密码生成面板 -->
+      <div class="gen-panel" id="genPanel" style="display:none;">
+        <div class="gen-options">
+          <div class="gen-opt">
+            <label>长度：<span id="lenVal">16</span></label>
+            <input type="range" id="genLength" min="8" max="30" value="16">
+          </div>
+          <label class="gen-check"><input type="checkbox" id="genUpper" checked> 大写字母 (A-Z)</label>
+          <label class="gen-check"><input type="checkbox" id="genNumber" checked> 数字 (0-9)</label>
+          <label class="gen-check"><input type="checkbox" id="genSymbol" checked> 特殊符号 (!@#$%)</label>
+        </div>
+        <div class="gen-preview" id="genPreview"></div>
+        <div class="gen-actions">
+          <button id="genRefresh" class="btn btn-sm">🔄 重新生成</button>
+          <button id="genUse" class="btn btn-primary btn-sm">使用此密码</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 注册 Service Worker（离线缓存）
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+  <script src="js/app.js"></script>
+</body>
+</html>

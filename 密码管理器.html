@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>密码管理器</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="密码管理器">
+  <style>
+:root {
+  --bg: #f0f4f8;
+  --card-bg: #fff;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: #eef2ff;
+  --danger: #f43f5e;
+  --danger-hover: #e11d48;
+  --danger-light: #fff1f2;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.06), 0 2px 4px -2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.04);
+  --transition: 0.2s ease;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #f0f4f8 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.6;
+  padding: 20px;
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container { max-width: 900px; margin: 0 auto; }
+
+.header { text-align: center; margin-bottom: 24px; }
+.header h1 {
+  font-size: 1.75rem; font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.toolbar {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+  padding: 16px 18px; background: var(--card-bg); border-radius: var(--radius);
+  box-shadow: var(--shadow); align-items: center;
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 9px 18px; border: none; border-radius: 24px;
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all var(--transition); white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #fff; box-shadow: 0 2px 8px rgba(99,102,241,.3);
+}
+.btn-primary:hover {
+  box-shadow: 0 4px 16px rgba(99,102,241,.4); transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  color: #fff; box-shadow: 0 2px 8px rgba(244,63,94,.25);
+}
+.btn-danger:hover {
+  box-shadow: 0 4px 16px rgba(244,63,94,.35); transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: var(--card-bg); border: 1.5px solid var(--border); color: var(--text);
+}
+.btn-outline:hover {
+  border-color: var(--primary); color: var(--primary); background: var(--primary-light);
+}
+
+.btn-sm {
+  padding: 6px 14px; font-size: .78rem; border: 1.5px solid var(--border);
+  border-radius: 20px; cursor: pointer; background: #fff; color: var(--text);
+  transition: all var(--transition); font-weight: 500;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-sm:hover { background: var(--bg); border-color: #cbd5e1; }
+
+.search-input {
+  flex: 1; min-width: 180px; padding: 9px 16px;
+  border: 1.5px solid var(--border); border-radius: 24px;
+  font-size: .875rem; outline: none; transition: all var(--transition); background: var(--bg);
+}
+.search-input:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.12); background: #fff;
+}
+
+.card-list {
+  display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+}
+
+.pw-card {
+  background: var(--card-bg); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+  transition: all var(--transition); border: 1.5px solid transparent;
+}
+.pw-card:hover {
+  box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: #e8ecf1;
+}
+
+.card-checkbox {
+  flex-shrink: 0; width: 18px; height: 18px;
+  accent-color: var(--primary); cursor: pointer;
+}
+
+.card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.card-site {
+  font-weight: 700; font-size: .95rem; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.card-site-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; font-weight: 700; flex-shrink: 0;
+}
+
+.card-meta {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  font-size: .82rem; color: var(--text-secondary);
+}
+.card-meta span { display: flex; align-items: center; gap: 5px; }
+
+.card-password {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: .85rem; color: var(--text-secondary); letter-spacing: 0.15em;
+}
+.card-password.visible { letter-spacing: 0; color: var(--text); font-weight: 600; }
+
+.card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.empty-state {
+  text-align: center; padding: 56px 24px; color: var(--text-secondary);
+}
+.empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .5; }
+.empty-state p { font-size: .9rem; }
+
+.add-form {
+  background: var(--card-bg); padding: 20px 22px;
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.add-form h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
+
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label {
+  font-size: .72rem; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.form-group input {
+  padding: 9px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-size: .875rem; outline: none;
+  transition: all var(--transition);
+}
+.form-group input:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+}
+
+.site-input    { flex: 2; min-width: 150px; }
+.account-input { flex: 2; min-width: 130px; }
+.password-input { flex: 2; min-width: 130px; }
+.add-btn       { align-self: end; }
+
+.gen-panel {
+  margin-top: 12px; padding: 16px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);
+}
+.gen-options { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
+.gen-opt { display: flex; align-items: center; gap: 8px; }
+.gen-opt label { font-size: .8rem; font-weight: 600; min-width: 60px; }
+.gen-opt input[type="range"] { width: 100px; accent-color: var(--primary); }
+.gen-check { font-size: .8rem; display: flex; align-items: center; gap: 5px; cursor: pointer; accent-color: var(--primary); }
+.gen-preview {
+  padding: 12px 16px; background: var(--card-bg);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-family: "SF Mono", "Fira Code", monospace; font-size: 1rem;
+  text-align: center; word-break: break-all; margin-bottom: 12px;
+  min-height: 44px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+}
+.gen-actions { display: flex; gap: 8px; justify-content: center; }
+
+.batch-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 18px; margin-top: 12px;
+  background: var(--danger-light); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); font-size: .85rem;
+  border: 1.5px solid rgba(244,63,94,.15);
+}
+.batch-bar span { flex: 1; font-weight: 700; color: var(--danger); }
+
+.stats { font-size: .75rem; color: var(--text-secondary); margin-top: 10px; text-align: center; }
+
+.toast {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: #fff; padding: 10px 24px; border-radius: 24px;
+  font-size: .85rem; opacity: 0; pointer-events: none;
+  transition: opacity .25s; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+.toast-show { opacity: 1; }
+
+.lock-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(15,23,42,.6); display: flex;
+  align-items: center; justify-content: center; backdrop-filter: blur(8px);
+}
+.lock-card {
+  background: var(--card-bg); padding: 36px 30px; border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  width: 390px; max-width: 90vw; text-align: center;
+}
+.lock-card h2 { margin-bottom: 6px; font-size: 1.3rem; font-weight: 700; }
+.lock-card p { font-size: .85rem; color: var(--text-secondary); margin-bottom: 18px; }
+.lock-form { display: flex; flex-direction: column; gap: 10px; }
+.lock-input {
+  width: 100%; padding: 11px 16px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-size: .9rem; outline: none;
+  transition: all var(--transition);
+}
+.lock-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+.lock-btn { width: 100%; justify-content: center; padding: 11px; font-size: .95rem; border-radius: var(--radius-sm); }
+.lock-error { margin-top: 10px; font-size: .8rem; min-height: 18px; color: var(--danger); }
+.lock-timer { margin-top: 4px; font-size: .9rem; font-weight: 600; color: var(--primary); }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(15,23,42,.5); display: flex;
+  align-items: center; justify-content: center; backdrop-filter: blur(4px);
+}
+.modal-card {
+  background: var(--card-bg); padding: 26px 22px; border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  width: 390px; max-width: 90vw; display: flex; flex-direction: column; gap: 10px;
+}
+.modal-card h3 { font-size: 1.05rem; font-weight: 700; text-align: center; }
+.modal-actions { display: flex; gap: 8px; justify-content: center; }
+
+@media (max-width: 640px) {
+  body { padding: 12px; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .form-row { flex-direction: column; }
+  .pw-card { flex-wrap: wrap; padding: 14px 16px; gap: 10px; }
+  .card-actions { width: 100%; justify-content: flex-end; }
+  .card-meta { flex-direction: column; gap: 2px; }
+}
+  </style>
+</head>
+<body>
+
+  <!-- 主密码锁屏 -->
+  <div class="lock-overlay" id="lockOverlay">
+    <div class="lock-card">
+      <h2 id="lockTitle">🔐 密码管理器</h2>
+      <p id="lockDesc"></p>
+      <div class="lock-form">
+        <input type="password" id="lockInput1" class="lock-input" placeholder="请输入主密码">
+        <input type="password" id="lockInput2" class="lock-input" placeholder="确认主密码" style="display:none;">
+        <button id="lockBtn" class="btn btn-primary lock-btn">确认</button>
+      </div>
+      <p class="lock-error" id="lockError"></p>
+      <p class="lock-timer" id="lockTimer"></p>
+    </div>
+  </div>
+
+  <!-- 修改主密码弹窗 -->
+  <div class="modal-overlay" id="changePwModal" style="display:none;">
+    <div class="modal-card">
+      <h3>修改主密码</h3>
+      <input type="password" id="oldPw" class="lock-input" placeholder="原主密码">
+      <input type="password" id="newPw1" class="lock-input" placeholder="新主密码">
+      <input type="password" id="newPw2" class="lock-input" placeholder="确认新密码">
+      <p class="lock-error" id="changePwError"></p>
+      <div class="modal-actions">
+        <button id="changePwConfirm" class="btn btn-primary">确认修改</button>
+        <button id="changePwCancel" class="btn btn-outline">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加密口令弹窗 -->
+  <div class="modal-overlay" id="cryptoPwModal" style="display:none;">
+    <div class="modal-card">
+      <h3 id="cryptoPwTitle">导出备份</h3>
+      <p id="cryptoPwDesc" style="font-size:.85rem;color:var(--text-secondary);"></p>
+      <input type="password" id="cryptoPw1" class="lock-input" placeholder="输入加密口令">
+      <input type="password" id="cryptoPw2" class="lock-input" placeholder="确认口令" style="display:none;">
+      <p class="lock-error" id="cryptoPwError"></p>
+      <div class="modal-actions">
+        <button id="cryptoPwConfirm" class="btn btn-primary">确认</button>
+        <button id="cryptoPwCancel" class="btn btn-outline">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑记录弹窗 -->
+  <div class="modal-overlay" id="editModal" style="display:none;">
+    <div class="modal-card">
+      <h3>编辑记录</h3>
+      <input type="text" id="editSite" class="lock-input" placeholder="网站/说明">
+      <input type="text" id="editAccount" class="lock-input" placeholder="账号">
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="editPassword" class="lock-input" placeholder="密码" style="flex:1;">
+        <button id="genEditPwBtn" class="btn btn-sm" type="button" style="white-space:nowrap;">🎲 生成</button>
+      </div>
+      <p class="lock-error" id="editError"></p>
+      <div class="modal-actions">
+        <button id="editConfirm" class="btn btn-primary">保存</button>
+        <button id="editCancel" class="btn btn-outline">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>🔐 密码管理器</h1>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="search-input" placeholder="搜索...">
+      <label for="fileInput" class="btn btn-primary" style="cursor:pointer;">📂 选择 TXT 文件</label>
+      <input type="file" id="fileInput" accept=".txt" style="display:none;">
+      <button id="clearBtn" class="btn btn-danger">🗑 清空全部</button>
+      <button id="changePwBtn" class="btn btn-outline" style="display:none;">🔑 修改主密码</button>
+      <span style="flex:1;"></span>
+      <button id="exportBtn" class="btn btn-outline">📤 导出备份</button>
+      <button id="importBtn" class="btn btn-outline">📥 导入备份</button>
+      <input type="file" id="importEncFile" accept=".enc" style="display:none;">
+    </div>
+
+    <div id="cardListHeader" style="display:none; align-items:center; gap:10px; padding:0 4px 8px;">
+      <label style="font-size:.8rem;font-weight:600;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="selectAll"> 全选
+      </label>
+    </div>
+    <div class="card-list" id="cardList"></div>
+    <p class="stats" id="stats"></p>
+
+    <div class="batch-bar" id="batchBar" style="display:none;">
+      <span id="batchCount">已选 0 条</span>
+      <button id="batchDelBtn" class="btn btn-danger btn-sm">删除所选</button>
+    </div>
+
+    <div class="add-form">
+      <h2>手动添加</h2>
+      <div class="form-row">
+        <div class="form-group site-input">
+          <label for="addSite">网站/说明</label>
+          <input type="text" id="addSite" placeholder="如：example.com">
+        </div>
+        <div class="form-group account-input">
+          <label for="addAccount">账号</label>
+          <input type="text" id="addAccount" placeholder="账号">
+        </div>
+        <div class="form-group password-input">
+          <label for="addPassword">密码</label>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="addPassword" placeholder="密码" style="flex:1;">
+            <button id="genBtn" class="btn btn-sm" type="button" style="white-space:nowrap;">🎲 生成</button>
+          </div>
+        </div>
+        <button id="addBtn" class="btn btn-primary add-btn">添加</button>
+      </div>
+
+      <div class="gen-panel" id="genPanel" style="display:none;">
+        <div class="gen-options">
+          <div class="gen-opt">
+            <label>长度：<span id="lenVal">16</span></label>
+            <input type="range" id="genLength" min="8" max="30" value="16">
+          </div>
+          <label class="gen-check"><input type="checkbox" id="genUpper" checked> 大写字母 (A-Z)</label>
+          <label class="gen-check"><input type="checkbox" id="genNumber" checked> 数字 (0-9)</label>
+          <label class="gen-check"><input type="checkbox" id="genSymbol" checked> 特殊符号 (!@#$%)</label>
+        </div>
+        <div class="gen-preview" id="genPreview"></div>
+        <div class="gen-actions">
+          <button id="genRefresh" class="btn btn-sm">🔄 重新生成</button>
+          <button id="genUse" class="btn btn-primary btn-sm">使用此密码</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+// ============ 密码管理器 - 核心逻辑 ============
+
+var entries = [];
+
+// ---- 主密码锁 ----
+var failCount = 0;
+var lockUntil = 0;
+
+function sha256Pure(message) {
+  var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+
+  var l = message.length * 8;
+  var padLen = 64 - ((message.length + 9) % 64);
+  if (padLen === 64) padLen = 0;
+  var paddedLen = message.length + 1 + padLen + 8;
+  var padded = new Uint8Array(paddedLen);
+  padded.set(message);
+  padded[message.length] = 0x80;
+  padded[paddedLen - 2] = (l >>> 8) & 0xff;
+  padded[paddedLen - 1] = l & 0xff;
+
+  var W = new Uint32Array(64);
+  for (var offset = 0; offset < paddedLen; offset += 64) {
+    for (var t = 0; t < 16; t++) {
+      var i = offset + t * 4;
+      W[t] = (padded[i] << 24) | (padded[i+1] << 16) | (padded[i+2] << 8) | padded[i+3];
+    }
+    for (var t = 16; t < 64; t++) {
+      var s0 = ((W[t-15] >>> 7) | (W[t-15] << 25)) ^ ((W[t-15] >>> 18) | (W[t-15] << 14)) ^ (W[t-15] >>> 3);
+      var s1 = ((W[t-2] >>> 17) | (W[t-2] << 15)) ^ ((W[t-2] >>> 19) | (W[t-2] << 13)) ^ (W[t-2] >>> 10);
+      W[t] = (W[t-16] + s0 + W[t-7] + s1) >>> 0;
+    }
+
+    var a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+    for (var t = 0; t < 64; t++) {
+      var S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      var ch = (e & f) ^ (~e & g);
+      var temp1 = (h + S1 + ch + K[t] + W[t]) >>> 0;
+      var S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      var maj = (a & b) ^ (a & c) ^ (b & c);
+      var temp2 = (S0 + maj) >>> 0;
+
+      h = g; g = f; f = e; e = (d + temp1) >>> 0;
+      d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0;
+    H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0;
+    H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+
+  var hex = '';
+  for (var i = 0; i < 8; i++) { hex += (H[i] >>> 0).toString(16).padStart(8, '0'); }
+  return hex;
+}
+
+function hashPw(pw) {
+  var encoder = new TextEncoder();
+  var data = encoder.encode(pw);
+  if (crypto.subtle) {
+    return crypto.subtle.digest('SHA-256', data).then(function (hashBuffer) {
+      var hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    });
+  }
+  return Promise.resolve(sha256Pure(data));
+}
+
+function hasMasterPw() {
+  return localStorage.getItem('pw_master_hash') !== null;
+}
+
+function getMasterHash() {
+  return localStorage.getItem('pw_master_hash');
+}
+
+function setMasterHash(hash) {
+  localStorage.setItem('pw_master_hash', hash);
+}
+
+function isLockedOut() {
+  return Date.now() < lockUntil;
+}
+
+function secondsLeft() {
+  return Math.ceil((lockUntil - Date.now()) / 1000);
+}
+
+function initLock() {
+  var overlay = document.getElementById('lockOverlay');
+  var title   = document.getElementById('lockTitle');
+  var desc    = document.getElementById('lockDesc');
+  var input1  = document.getElementById('lockInput1');
+  var input2  = document.getElementById('lockInput2');
+  var btn     = document.getElementById('lockBtn');
+  var error   = document.getElementById('lockError');
+  var timerEl = document.getElementById('lockTimer');
+
+  overlay.style.display = 'flex';
+  document.getElementById('changePwBtn').style.display = 'none';
+
+  if (hasMasterPw()) {
+    title.textContent = '🔐 密码管理器';
+    desc.textContent = '请输入主密码解锁';
+    input1.style.display = '';
+    input2.style.display = 'none';
+    input1.value = '';
+    input1.placeholder = '主密码';
+    error.textContent = '';
+    timerEl.textContent = '';
+    btn.textContent = '解锁';
+    btn.onclick = doUnlock;
+    input1.onkeydown = function (e) { if (e.key === 'Enter') doUnlock(); };
+
+    if (isLockedOut()) {
+      input1.disabled = true;
+      btn.disabled = true;
+      startLockTimer();
+    }
+  } else {
+    title.textContent = '🔐 首次使用';
+    desc.textContent = '请设置一个主密码（至少 4 位）';
+    input1.style.display = '';
+    input1.placeholder = '设置主密码';
+    input2.style.display = '';
+    input2.value = '';
+    input2.placeholder = '确认主密码';
+    error.textContent = '';
+    timerEl.textContent = '';
+    btn.textContent = '设置';
+    btn.onclick = doSetup;
+    input2.onkeydown = function (e) { if (e.key === 'Enter') doSetup(); };
+    input1.onkeydown = function () {};
+  }
+}
+
+function startLockTimer() {
+  var timerEl = document.getElementById('lockTimer');
+  var input1  = document.getElementById('lockInput1');
+  var btn     = document.getElementById('lockBtn');
+  var error   = document.getElementById('lockError');
+
+  function tick() {
+    if (!isLockedOut()) {
+      input1.disabled = false;
+      btn.disabled = false;
+      timerEl.textContent = '';
+      error.textContent = '';
+      failCount = 0;
+      return;
+    }
+    timerEl.textContent = '请等待 ' + secondsLeft() + ' 秒后重试';
+    error.textContent = '连续 3 次错误，已锁定 30 秒';
+    setTimeout(tick, 200);
+  }
+  tick();
+}
+
+async function doUnlock() {
+  var input1 = document.getElementById('lockInput1');
+  var error  = document.getElementById('lockError');
+  var pw = input1.value;
+  if (!pw) { error.textContent = '请输入主密码'; return; }
+
+  try {
+    var hash = await hashPw(pw);
+    if (hash === getMasterHash()) {
+      failCount = 0;
+      lockUntil = 0;
+      unlock();
+    } else {
+      failCount++;
+      input1.value = '';
+      if (failCount >= 3) {
+        lockUntil = Date.now() + 30000;
+        document.getElementById('lockInput1').disabled = true;
+        document.getElementById('lockBtn').disabled = true;
+        startLockTimer();
+        error.textContent = '连续 3 次错误，已锁定 30 秒';
+      } else {
+        error.textContent = '密码错误（剩余 ' + (3 - failCount) + ' 次机会）';
+      }
+    }
+  } catch (e) {
+    error.textContent = '加密失败：' + e.message;
+  }
+}
+
+async function doSetup() {
+  var input1 = document.getElementById('lockInput1');
+  var input2 = document.getElementById('lockInput2');
+  var error  = document.getElementById('lockError');
+  var pw1 = input1.value;
+  var pw2 = input2.value;
+
+  if (!pw1) { error.textContent = '请输入主密码'; return; }
+  if (pw1.length < 4) { error.textContent = '主密码至少需要 4 位'; return; }
+  if (pw1 !== pw2) { error.textContent = '两次输入不一致'; return; }
+
+  try {
+    var hash = await hashPw(pw1);
+    setMasterHash(hash);
+    input1.value = '';
+    input2.value = '';
+    unlock();
+  } catch (e) {
+    error.textContent = '加密失败：' + e.message;
+  }
+}
+
+function unlock() {
+  document.getElementById('lockOverlay').style.display = 'none';
+  document.getElementById('changePwBtn').style.display = '';
+}
+
+function lock() {
+  document.getElementById('lockOverlay').style.display = 'flex';
+  document.getElementById('changePwBtn').style.display = 'none';
+  failCount = 0;
+  initLock();
+}
+
+// ---- 修改主密码 ----
+function showChangePwModal() {
+  document.getElementById('changePwModal').style.display = 'flex';
+  document.getElementById('oldPw').value = '';
+  document.getElementById('newPw1').value = '';
+  document.getElementById('newPw2').value = '';
+  document.getElementById('changePwError').textContent = '';
+}
+
+function hideChangePwModal() {
+  document.getElementById('changePwModal').style.display = 'none';
+}
+
+async function handleChangePw() {
+  var oldPw  = document.getElementById('oldPw').value;
+  var newPw1 = document.getElementById('newPw1').value;
+  var newPw2 = document.getElementById('newPw2').value;
+  var error  = document.getElementById('changePwError');
+
+  if (!oldPw) { error.textContent = '请输入原主密码'; return; }
+  var oldHash = await hashPw(oldPw);
+  if (oldHash !== getMasterHash()) { error.textContent = '原密码错误'; return; }
+  if (!newPw1) { error.textContent = '请输入新密码'; return; }
+  if (newPw1.length < 4) { error.textContent = '新密码至少需要 4 位'; return; }
+  if (newPw1 !== newPw2) { error.textContent = '两次输入不一致'; return; }
+
+  var newHash = await hashPw(newPw1);
+  setMasterHash(newHash);
+  hideChangePwModal();
+  showToast('主密码已更新');
+}
+
+// ---- 持久化（纯本地模式，不连服务器）----
+function load(callback) {
+  try {
+    var raw = localStorage.getItem('pw_manager_data');
+    if (raw) entries = JSON.parse(raw);
+  } catch (e) {
+    entries = [];
+  }
+  if (callback) callback();
+}
+
+function save() {
+  var json = JSON.stringify(entries);
+  localStorage.setItem('pw_manager_data', json);
+}
+
+// ---- TXT 解析 ----
+function parseLine(line) {
+  line = line.trim();
+  if (!line) return null;
+
+  var parts;
+
+  if (line.includes(',')) {
+    parts = line.split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  } else if (line.includes('，')) {
+    parts = line.split('，').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  } else if (line.includes('：') || line.includes(':')) {
+    parts = line.split(/[：:]/).map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  } else if (line.includes('\t')) {
+    parts = line.split('\t').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+  } else {
+    parts = line.split(/\s+/).filter(function (s) { return s; });
+  }
+
+  if (!parts || parts.length < 2) return null;
+
+  if (parts.length >= 3) {
+    return {
+      site: parts[0],
+      account: parts.slice(0, -1).join(' '),
+      password: parts[parts.length - 1]
+    };
+  }
+  return { site: '', account: parts[0], password: parts[1] };
+}
+
+function handleFile(file) {
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var lines = e.target.result.split(/\r?\n/);
+    var added = 0;
+    lines.forEach(function (line) {
+      var parsed = parseLine(line);
+      if (parsed) {
+        entries.push({
+          id: Date.now() + Math.random(),
+          site: parsed.site,
+          account: parsed.account,
+          password: parsed.password
+        });
+        added++;
+      }
+    });
+    save();
+    render();
+    alert('成功导入 ' + added + ' 条记录');
+  };
+  reader.readAsText(file);
+}
+
+// ---- 渲染 ----
+function render() {
+  var list = document.getElementById('cardList');
+  var header = document.getElementById('cardListHeader');
+  var searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+  var filtered = entries;
+  if (searchTerm) {
+    filtered = entries.filter(function (e) {
+      return e.site.toLowerCase().includes(searchTerm) ||
+             e.account.toLowerCase().includes(searchTerm) ||
+             e.password.toLowerCase().includes(searchTerm);
+    });
+  }
+
+  if (entries.length > 0) {
+    header.style.display = 'flex';
+  } else {
+    header.style.display = 'none';
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon">📭</div>' +
+        '<p>' + (entries.length === 0 ? '还没有密码记录' : '没有匹配的记录') + '</p>' +
+      '</div>';
+  } else {
+    list.innerHTML = filtered.map(function (e) {
+      var realIdx = entries.indexOf(e);
+      var sel = selectedSet[e.id] ? ' checked' : '';
+      var firstChar = (e.site || '?').charAt(0).toUpperCase();
+
+      return '<div class="pw-card">' +
+        '<input type="checkbox" class="card-checkbox" onchange="toggleSelect(' + e.id + ',this.checked)"' + sel + '>' +
+        '<div class="card-body">' +
+          '<div class="card-site">' +
+            '<div class="card-site-icon">' + esc(firstChar) + '</div>' +
+            '<span>' + esc(e.site || '（无网站）') + '</span>' +
+          '</div>' +
+          '<div class="card-meta">' +
+            '<span>👤 ' + esc(e.account) + '</span>' +
+            '<span>🔑 <span class="card-password" id="pw-' + realIdx + '">' + '•'.repeat(10) + '</span>' +
+            '<span id="pw-text-' + realIdx + '" style="display:none;font-family:monospace;">' + esc(e.password) + '</span></span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-actions">' +
+          '<button class="btn-sm" onclick="showEditModal(' + realIdx + ')">✏️</button>' +
+          '<button class="btn-sm" onclick="togglePw(' + realIdx + ')" id="btn-toggle-' + realIdx + '">👁</button>' +
+          '<button class="btn-sm" onclick="copyText(\'' + escJs(e.account) + '\')">📋 号</button>' +
+          '<button class="btn-sm" onclick="copyText(\'' + escJs(e.password) + '\')">📋 密</button>' +
+          '<button class="btn-sm" style="color:var(--danger);" onclick="delEntry(' + realIdx + ')">✕</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('stats').textContent =
+    '共 ' + entries.length + ' 条记录' +
+    (searchTerm && filtered.length !== entries.length ? '（筛选显示 ' + filtered.length + ' 条）' : '');
+}
+
+// ---- 工具函数 ----
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function escJs(s) {
+  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+function togglePw(idx) {
+  var masked = document.getElementById('pw-' + idx);
+  var text   = document.getElementById('pw-text-' + idx);
+  var btn    = document.getElementById('btn-toggle-' + idx);
+  if (masked.style.display === 'none') {
+    masked.style.display = '';
+    text.style.display = 'none';
+    btn.textContent = '👁';
+  } else {
+    masked.style.display = 'none';
+    text.style.display = '';
+    btn.textContent = '🙈';
+  }
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(function () {
+    showToast('已复制');
+  }).catch(function () {
+    showToast('复制失败');
+  });
+}
+
+function showToast(msg) {
+  var toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  requestAnimationFrame(function () {
+    toast.classList.add('toast-show');
+  });
+  setTimeout(function () {
+    toast.classList.remove('toast-show');
+    setTimeout(function () { document.body.removeChild(toast); }, 300);
+  }, 1200);
+}
+
+function delEntry(idx) {
+  if (!confirm('确定删除这条记录？')) return;
+  entries.splice(idx, 1);
+  save();
+  render();
+}
+
+// ---- 编辑功能 ----
+var editingIdx = -1;
+
+function showEditModal(idx) {
+  editingIdx = idx;
+  var e = entries[idx];
+  document.getElementById('editSite').value = e.site || '';
+  document.getElementById('editAccount').value = e.account;
+  document.getElementById('editPassword').value = e.password;
+  document.getElementById('editError').textContent = '';
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function hideEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+  editingIdx = -1;
+}
+
+function handleEdit() {
+  var site = document.getElementById('editSite').value.trim();
+  var account = document.getElementById('editAccount').value.trim();
+  var password = document.getElementById('editPassword').value.trim();
+  var error = document.getElementById('editError');
+
+  if (!account || !password) { error.textContent = '账号和密码不能为空'; return; }
+
+  entries[editingIdx].site = site;
+  entries[editingIdx].account = account;
+  entries[editingIdx].password = password;
+  save();
+  render();
+  hideEditModal();
+  showToast('已保存');
+}
+
+function genEditPassword() {
+  document.getElementById('editPassword').value = generatePassword();
+}
+
+// ---- 多选功能 ----
+var selectedSet = {};
+
+function getSelectedIds() {
+  var ids = [];
+  for (var id in selectedSet) {
+    if (selectedSet[id]) ids.push(parseFloat(id));
+  }
+  return ids;
+}
+
+function toggleSelect(id, checked) {
+  if (checked) {
+    selectedSet[id] = true;
+  } else {
+    delete selectedSet[id];
+    document.getElementById('selectAll').checked = false;
+  }
+  updateBatchBar();
+}
+
+function selectAllToggle(checked) {
+  selectedSet = {};
+  if (checked) {
+    entries.forEach(function (e) { selectedSet[e.id] = true; });
+  }
+  render();
+  updateBatchBar();
+}
+
+function updateBatchBar() {
+  var ids = getSelectedIds();
+  var bar = document.getElementById('batchBar');
+  if (ids.length > 0) {
+    bar.style.display = 'flex';
+    document.getElementById('batchCount').textContent = '已选 ' + ids.length + ' 条';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function batchDelete() {
+  var ids = getSelectedIds();
+  if (ids.length === 0) return;
+  if (!confirm('确定删除选中的 ' + ids.length + ' 条记录？')) return;
+  var idSet = {};
+  ids.forEach(function (id) { idSet[id] = true; });
+  entries = entries.filter(function (e) { return !idSet[e.id]; });
+  selectedSet = {};
+  save();
+  render();
+  updateBatchBar();
+}
+
+// ---- AES 加解密 ----
+function uint8ToBase64(arr) {
+  var binary = '';
+  var len = arr.length;
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode(arr[i]);
+  }
+  return btoa(binary);
+}
+
+function base64ToUint8(str) {
+  var binary = atob(str);
+  var len = binary.length;
+  var arr = new Uint8Array(len);
+  for (var i = 0; i < len; i++) {
+    arr[i] = binary.charCodeAt(i);
+  }
+  return arr;
+}
+
+async function encryptData(plaintext, password) {
+  var enc = new TextEncoder();
+  var salt = crypto.getRandomValues(new Uint8Array(16));
+
+  var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  var key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+
+  var iv = crypto.getRandomValues(new Uint8Array(12));
+  var encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    enc.encode(plaintext)
+  );
+
+  var combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+  return uint8ToBase64(combined);
+}
+
+async function decryptData(b64data, password) {
+  var combined = base64ToUint8(b64data);
+  var salt = combined.slice(0, 16);
+  var iv = combined.slice(16, 28);
+  var ciphertext = combined.slice(28);
+
+  var enc = new TextEncoder();
+  var keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  var key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+
+  var decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    ciphertext
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
+
+// ---- 导出/导入流程 ----
+var cryptoAction = '';
+var pendingEncFile = null;
+
+function showCryptoModal(action) {
+  cryptoAction = action;
+  var title = document.getElementById('cryptoPwTitle');
+  var desc = document.getElementById('cryptoPwDesc');
+  var input1 = document.getElementById('cryptoPw1');
+  var input2 = document.getElementById('cryptoPw2');
+  var error = document.getElementById('cryptoPwError');
+  var btn = document.getElementById('cryptoPwConfirm');
+
+  input1.value = '';
+  input2.value = '';
+  error.textContent = '';
+
+  if (action === 'export') {
+    title.textContent = '导出备份';
+    desc.textContent = '请设置一个加密口令来保护备份文件';
+    input1.placeholder = '设置加密口令';
+    input2.style.display = '';
+    input2.placeholder = '确认口令';
+    btn.textContent = '导出';
+    input2.onkeydown = function (e) { if (e.key === 'Enter') handleCryptoConfirm(); };
+    input1.onkeydown = function () {};
+  } else {
+    title.textContent = '导入备份';
+    desc.textContent = '请输入备份文件的加密口令';
+    input1.placeholder = '加密口令';
+    input2.style.display = 'none';
+    btn.textContent = '导入';
+    input1.onkeydown = function (e) { if (e.key === 'Enter') handleCryptoConfirm(); };
+  }
+
+  document.getElementById('cryptoPwModal').style.display = 'flex';
+}
+
+function hideCryptoModal() {
+  document.getElementById('cryptoPwModal').style.display = 'none';
+  cryptoAction = '';
+  pendingEncFile = null;
+}
+
+async function handleCryptoConfirm() {
+  var pw1 = document.getElementById('cryptoPw1').value;
+  var pw2 = document.getElementById('cryptoPw2').value;
+  var error = document.getElementById('cryptoPwError');
+
+  if (!pw1) { error.textContent = '请输入口令'; return; }
+
+  if (cryptoAction === 'export') {
+    if (pw1.length < 4) { error.textContent = '口令至少需要 4 位'; return; }
+    if (pw1 !== pw2) { error.textContent = '两次输入不一致'; return; }
+    try {
+      var json = JSON.stringify(entries);
+      var encrypted = await encryptData(json, pw1);
+      triggerDownload(encrypted);
+      hideCryptoModal();
+      showToast('备份已导出');
+    } catch (e) {
+      error.textContent = '加密失败：' + e.message;
+    }
+  } else {
+    if (!pendingEncFile) { error.textContent = '请先选择 .enc 文件'; return; }
+    try {
+      var text = await readFileAsText(pendingEncFile);
+      var decrypted = await decryptData(text, pw1);
+      var imported = JSON.parse(decrypted);
+      var merged = mergeEntries(imported);
+      save();
+      render();
+      hideCryptoModal();
+      showToast('成功导入 ' + merged.added + ' 条，跳过 ' + merged.skipped + ' 条重复');
+    } catch (e) {
+      error.textContent = '解密失败，口令错误或文件损坏';
+    }
+  }
+}
+
+function triggerDownload(b64data) {
+  var blob = new Blob([b64data], { type: 'application/octet-stream' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'passwords-backup-' + new Date().toISOString().slice(0, 10) + '.enc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function readFileAsText(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function (e) { resolve(e.target.result); };
+    reader.onerror = function () { reject(new Error('读取文件失败')); };
+    reader.readAsText(file);
+  });
+}
+
+function mergeEntries(imported) {
+  if (!Array.isArray(imported)) throw new Error('数据格式错误');
+  var added = 0;
+  var skipped = 0;
+  var existingKeys = {};
+  entries.forEach(function (e) {
+    existingKeys[e.site + '|||' + e.account + '|||' + e.password] = true;
+  });
+  imported.forEach(function (item) {
+    if (!item.site && !item.account && !item.password) return;
+    var key = (item.site || '') + '|||' + (item.account || '') + '|||' + (item.password || '');
+    if (existingKeys[key]) { skipped++; return; }
+    existingKeys[key] = true;
+    entries.push({
+      id: Date.now() + Math.random(),
+      site: item.site || '',
+      account: item.account || '',
+      password: item.password || ''
+    });
+    added++;
+  });
+  return { added: added, skipped: skipped };
+}
+
+// ---- 随机密码生成 ----
+var LOWER = 'abcdefghijklmnopqrstuvwxyz';
+var UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+var DIGIT = '0123456789';
+var SYMBOL = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+function generatePassword() {
+  var length = parseInt(document.getElementById('genLength').value);
+  var useUpper = document.getElementById('genUpper').checked;
+  var useNumber = document.getElementById('genNumber').checked;
+  var useSymbol = document.getElementById('genSymbol').checked;
+
+  var charset = LOWER;
+  if (useUpper) charset += UPPER;
+  if (useNumber) charset += DIGIT;
+  if (useSymbol) charset += SYMBOL;
+
+  var arr = new Uint32Array(length);
+  crypto.getRandomValues(arr);
+
+  var result = '';
+  for (var i = 0; i < length; i++) {
+    result += charset[arr[i] % charset.length];
+  }
+
+  var required = '';
+  if (useUpper) required += UPPER[arr[0] % UPPER.length];
+  if (useNumber) required += DIGIT[arr[1] % DIGIT.length];
+  if (useSymbol) required += SYMBOL[arr[2] % SYMBOL.length];
+
+  if (required.length > 0) {
+    result = result.substring(0, Math.max(0, length - required.length)) + required;
+  }
+
+  document.getElementById('genPreview').textContent = result;
+  return result;
+}
+
+function showGenPanel() {
+  document.getElementById('genPanel').style.display = 'block';
+  generatePassword();
+}
+
+function useGenPassword() {
+  var pw = document.getElementById('genPreview').textContent;
+  if (pw) document.getElementById('addPassword').value = pw;
+}
+
+// ---- 事件绑定 ----
+document.addEventListener('DOMContentLoaded', function () {
+  initLock();
+
+  document.getElementById('fileInput').addEventListener('change', function () {
+    if (this.files.length > 0) {
+      handleFile(this.files[0]);
+      this.value = '';
+    }
+  });
+
+  document.getElementById('searchInput').addEventListener('input', render);
+
+  document.getElementById('addBtn').addEventListener('click', function () {
+    var site    = document.getElementById('addSite').value.trim();
+    var account = document.getElementById('addAccount').value.trim();
+    var password = document.getElementById('addPassword').value.trim();
+
+    if (!account || !password) {
+      alert('账号和密码不能为空');
+      return;
+    }
+
+    entries.push({
+      id: Date.now() + Math.random(),
+      site: site,
+      account: account,
+      password: password
+    });
+    save();
+    render();
+
+    document.getElementById('addSite').value = '';
+    document.getElementById('addAccount').value = '';
+    document.getElementById('addPassword').value = '';
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function () {
+    if (!confirm('确定清空所有记录？此操作不可恢复。')) return;
+    entries = [];
+    save();
+    render();
+  });
+
+  document.getElementById('genBtn').addEventListener('click', showGenPanel);
+  document.getElementById('genRefresh').addEventListener('click', generatePassword);
+  document.getElementById('genUse').addEventListener('click', function () {
+    useGenPassword();
+    document.getElementById('genPanel').style.display = 'none';
+  });
+  document.getElementById('genLength').addEventListener('input', function () {
+    document.getElementById('lenVal').textContent = this.value;
+    generatePassword();
+  });
+
+  document.getElementById('changePwBtn').addEventListener('click', showChangePwModal);
+  document.getElementById('changePwConfirm').addEventListener('click', handleChangePw);
+  document.getElementById('changePwCancel').addEventListener('click', hideChangePwModal);
+
+  document.getElementById('editConfirm').addEventListener('click', handleEdit);
+  document.getElementById('editCancel').addEventListener('click', hideEditModal);
+  document.getElementById('genEditPwBtn').addEventListener('click', genEditPassword);
+
+  document.getElementById('exportBtn').addEventListener('click', function () {
+    if (entries.length === 0) { alert('没有可导出的数据'); return; }
+    showCryptoModal('export');
+  });
+  document.getElementById('importBtn').addEventListener('click', function () {
+    document.getElementById('importEncFile').click();
+  });
+  document.getElementById('importEncFile').addEventListener('change', function () {
+    if (this.files.length > 0) {
+      pendingEncFile = this.files[0];
+      this.value = '';
+      showCryptoModal('import');
+    }
+  });
+  document.getElementById('cryptoPwConfirm').addEventListener('click', handleCryptoConfirm);
+  document.getElementById('cryptoPwCancel').addEventListener('click', hideCryptoModal);
+
+  document.getElementById('selectAll').addEventListener('change', function () {
+    selectAllToggle(this.checked);
+  });
+  document.getElementById('batchDelBtn').addEventListener('click', batchDelete);
+
+  load(render);
+});
+  </script>
+</body>
+</html>
