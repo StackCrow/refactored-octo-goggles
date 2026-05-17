@@ -1,4 +1,4 @@
-var CACHE = 'pw-manager-v2';
+var CACHE = 'pw-manager-v3';
 var FILES = [
   './',
   './index.html',
@@ -32,11 +32,21 @@ self.addEventListener('activate', function (e) {
   self.clients.claim();
 });
 
-// 请求：优先用缓存，没缓存才联网
+// 请求：联网优先，没网才用缓存
 self.addEventListener('fetch', function (e) {
   e.respondWith(
-    caches.match(e.request).then(function (cached) {
-      return cached || fetch(e.request);
-    })
+    fetch(e.request)
+      .then(function (response) {
+        // 联网成功，更新缓存
+        var clone = response.clone();
+        caches.open(CACHE).then(function (cache) {
+          cache.put(e.request, clone);
+        });
+        return response;
+      })
+      .catch(function () {
+        // 没网，用缓存
+        return caches.match(e.request);
+      })
   );
 });
