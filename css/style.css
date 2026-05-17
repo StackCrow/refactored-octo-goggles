@@ -26,7 +26,7 @@ body {
   background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #f0f4f8 100%);
   color: var(--text);
   line-height: 1.6;
-  padding: 20px 20px calc(var(--tab-height) + 80px);
+  padding: env(safe-area-inset-top, 20px) 16px calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 80px);
   min-height: 100vh;
   -webkit-text-size-adjust: 100%;
 }
@@ -235,7 +235,7 @@ body {
 
 /* 浮动添加按钮 */
 .fab {
-  position: fixed; bottom: calc(var(--tab-height) + 20px); right: 20px;
+  position: fixed; bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 20px); right: 20px;
   width: 56px; height: 56px; border-radius: 50%;
   background: linear-gradient(135deg, #6366f1, #7c3aed);
   color: #fff; border: none; font-size: 2rem; line-height: 1;
@@ -249,10 +249,11 @@ body {
 
 /* 底部标签栏 */
 .tab-bar {
-  position: fixed; bottom: 0; left: 0; right: 0; height: var(--tab-height);
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
   background: var(--card-bg); border-top: 1px solid var(--border);
   display: flex; z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .tab-btn {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -283,6 +284,6 @@ body {
 
 /* 响应式 */
 @media (max-width: 640px) {
-  body { padding: 12px 12px calc(var(--tab-height) + 80px); }
-  .fab { right: 16px; bottom: calc(var(--tab-height) + 16px); }
+  body { padding: env(safe-area-inset-top, 12px) 12px calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 80px); }
+  .fab { right: 16px; bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 16px); }
 }
