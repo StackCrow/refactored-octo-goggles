@@ -84,10 +84,11 @@ body {
 }
 
 .btn-sm {
-  padding: 5px 10px; font-size: .73rem; border: 1.5px solid var(--border);
+  padding: 4px 7px; font-size: .7rem; border: 1.5px solid var(--border);
   border-radius: 16px; cursor: pointer; background: #fff; color: var(--text);
   transition: all var(--transition); font-weight: 500;
   -webkit-tap-highlight-color: transparent;
+  white-space: nowrap; flex-shrink: 0;
 }
 .btn-sm:hover { background: var(--bg); border-color: #cbd5e1; }
 
@@ -97,10 +98,11 @@ body {
 }
 
 .pw-card {
-  background: var(--card-bg); padding: 10px 14px;
-  display: flex; align-items: center; gap: 10px;
+  background: var(--card-bg); padding: 7px 12px;
+  display: flex; align-items: center; gap: 8px;
   transition: all var(--transition);
   border-bottom: 1px solid var(--border);
+  min-height: 44px;
 }
 .pw-card:first-child { border-radius: var(--radius) var(--radius) 0 0; }
 .pw-card:last-child { border-radius: 0 0 var(--radius) var(--radius); border-bottom: none; }
@@ -111,32 +113,37 @@ body {
   accent-color: var(--primary); cursor: pointer;
 }
 
-.card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.card-body {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
+  overflow: hidden;
+}
 
 .card-site {
-  font-weight: 700; font-size: .85rem; color: var(--text);
-  display: flex; align-items: center; gap: 7px;
+  font-weight: 700; font-size: .82rem; color: var(--text);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .card-site-icon {
-  width: 28px; height: 28px; border-radius: 6px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 26px; height: 26px; border-radius: 6px;
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
   color: #fff; display: flex; align-items: center; justify-content: center;
-  font-size: .8rem; font-weight: 700; flex-shrink: 0;
+  font-size: .75rem; font-weight: 700; flex-shrink: 0;
 }
 
 .card-meta {
-  display: flex; gap: 12px; flex-wrap: wrap;
-  font-size: .76rem; color: var(--text-secondary);
+  display: flex; gap: 8px; align-items: center;
+  font-size: .74rem; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.card-meta span { display: flex; align-items: center; gap: 3px; }
+.card-meta span { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
 
 .card-password {
   font-family: "SF Mono", "Fira Code", monospace;
   font-size: .78rem; color: var(--text-secondary); letter-spacing: 0.12em;
 }
 
-.card-actions { display: flex; gap: 3px; flex-shrink: 0; }
+.card-actions { display: flex; gap: 2px; flex-shrink: 0; flex-wrap: nowrap; }
 
 /* 空状态 */
 .empty-state {
@@ -278,8 +285,5 @@ body {
 /* 响应式 */
 @media (max-width: 640px) {
   body { padding: 12px 12px calc(var(--tab-height) + 80px); }
-  .pw-card { flex-wrap: wrap; padding: 10px 12px; }
-  .card-actions { width: 100%; justify-content: flex-end; }
-  .card-meta { flex-direction: column; gap: 0; }
   .fab { right: 16px; bottom: calc(var(--tab-height) + 16px); }
 }
