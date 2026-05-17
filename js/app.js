@@ -3,6 +3,47 @@
 // 数据结构：{ id, site, account, password }
 var entries = [];
 
+// ---- IndexedDB 持久化（iOS 不会当缓存清理） ----
+var DB_NAME = 'pw_manager_db';
+var dbPromise = null;
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise(function (resolve, reject) {
+    var req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = function (e) {
+      if (!e.target.result.objectStoreNames.contains('kv')) {
+        e.target.result.createObjectStore('kv');
+      }
+    };
+    req.onsuccess = function (e) { resolve(e.target.result); };
+    req.onerror = function (e) { reject(e.target.error); };
+  });
+  return dbPromise;
+}
+
+function dbGet(key) {
+  return openDB().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction('kv', 'readonly');
+      var req = tx.objectStore('kv').get(key);
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  });
+}
+
+function dbSet(key, value) {
+  return openDB().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction('kv', 'readwrite');
+      var req = tx.objectStore('kv').put(value, key);
+      req.onsuccess = function () { resolve(); };
+      req.onerror = function () { reject(req.error); };
+    });
+  });
+}
+
 // ---- 主密码锁 ----
 var failCount = 0;
 var lockUntil = 0;
@@ -78,15 +119,23 @@ function hashPw(pw) {
 }
 
 function hasMasterPw() {
-  return localStorage.getItem('pw_master_hash') !== null;
+  return dbGet('pw_master_hash').then(function (hash) {
+    if (hash !== null && hash !== undefined) return true;
+    // 首次从 localStorage 迁移
+    var ls = localStorage.getItem('pw_master_hash');
+    if (ls) {
+      return dbSet('pw_master_hash', ls).then(function () { return true; });
+    }
+    return false;
+  });
 }
 
 function getMasterHash() {
-  return localStorage.getItem('pw_master_hash');
+  return dbGet('pw_master_hash');
 }
 
 function setMasterHash(hash) {
-  localStorage.setItem('pw_master_hash', hash);
+  return dbSet('pw_master_hash', hash);
 }
 
 function isLockedOut() {
@@ -109,41 +158,43 @@ function initLock() {
 
   overlay.style.display = 'flex';
 
-  if (hasMasterPw()) {
-    // 已有主密码 → 解锁模式
-    title.textContent = '🔐 密码管理器';
-    desc.textContent = '请输入主密码解锁';
-    input1.style.display = '';
-    input2.style.display = 'none';
-    input1.value = '';
-    input1.placeholder = '主密码';
-    error.textContent = '';
-    timerEl.textContent = '';
-    btn.textContent = '解锁';
-    btn.onclick = doUnlock;
-    input1.onkeydown = function (e) { if (e.key === 'Enter') doUnlock(); };
+  hasMasterPw().then(function (has) {
+    if (has) {
+      // 已有主密码 → 解锁模式
+      title.textContent = '🔐 密码管理器';
+      desc.textContent = '请输入主密码解锁';
+      input1.style.display = '';
+      input2.style.display = 'none';
+      input1.value = '';
+      input1.placeholder = '主密码';
+      error.textContent = '';
+      timerEl.textContent = '';
+      btn.textContent = '解锁';
+      btn.onclick = doUnlock;
+      input1.onkeydown = function (e) { if (e.key === 'Enter') doUnlock(); };
 
-    if (isLockedOut()) {
-      input1.disabled = true;
-      btn.disabled = true;
-      startLockTimer();
+      if (isLockedOut()) {
+        input1.disabled = true;
+        btn.disabled = true;
+        startLockTimer();
+      }
+    } else {
+      // 首次使用 → 设置模式
+      title.textContent = '🔐 首次使用';
+      desc.textContent = '请设置一个主密码（至少 4 位）';
+      input1.style.display = '';
+      input1.placeholder = '设置主密码';
+      input2.style.display = '';
+      input2.value = '';
+      input2.placeholder = '确认主密码';
+      error.textContent = '';
+      timerEl.textContent = '';
+      btn.textContent = '设置';
+      btn.onclick = doSetup;
+      input2.onkeydown = function (e) { if (e.key === 'Enter') doSetup(); };
+      input1.onkeydown = function () {};
     }
-  } else {
-    // 首次使用 → 设置模式
-    title.textContent = '🔐 首次使用';
-    desc.textContent = '请设置一个主密码（至少 4 位）';
-    input1.style.display = '';
-    input1.placeholder = '设置主密码';
-    input2.style.display = '';
-    input2.value = '';
-    input2.placeholder = '确认主密码';
-    error.textContent = '';
-    timerEl.textContent = '';
-    btn.textContent = '设置';
-    btn.onclick = doSetup;
-    input2.onkeydown = function (e) { if (e.key === 'Enter') doSetup(); };
-    input1.onkeydown = function () {};
-  }
+  });
 }
 
 function startLockTimer() {
@@ -176,7 +227,8 @@ async function doUnlock() {
 
   try {
     var hash = await hashPw(pw);
-    if (hash === getMasterHash()) {
+    var stored = await getMasterHash();
+    if (hash === stored) {
       failCount = 0;
       lockUntil = 0;
       unlock();
@@ -211,7 +263,7 @@ async function doSetup() {
 
   try {
     var hash = await hashPw(pw1);
-    setMasterHash(hash);
+    await setMasterHash(hash);
     input1.value = '';
     input2.value = '';
     unlock();
@@ -251,53 +303,54 @@ async function handleChangePw() {
 
   if (!oldPw) { error.textContent = '请输入原主密码'; return; }
   var oldHash = await hashPw(oldPw);
-  if (oldHash !== getMasterHash()) { error.textContent = '原密码错误'; return; }
+  var stored = await getMasterHash();
+  if (oldHash !== stored) { error.textContent = '原密码错误'; return; }
   if (!newPw1) { error.textContent = '请输入新密码'; return; }
   if (newPw1.length < 4) { error.textContent = '新密码至少需要 4 位'; return; }
   if (newPw1 !== newPw2) { error.textContent = '两次输入不一致'; return; }
 
   var newHash = await hashPw(newPw1);
-  setMasterHash(newHash);
+  await setMasterHash(newHash);
   hideChangePwModal();
   showToast('主密码已更新');
 }
 
 // ---- 持久化 ----
-function isServerMode() {
-  return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+function load(callback) {
+  dbGet('pw_manager_data').then(function (raw) {
+    if (raw) {
+      entries = JSON.parse(raw);
+      if (callback) callback();
+    } else {
+      // 首次使用：从 localStorage 迁移
+      tryMigrate(callback);
+    }
+  }).catch(function () {
+    tryMigrate(callback);
+  });
 }
 
-function load(callback) {
-  if (isServerMode()) {
-    fetch('/api/data')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        entries = data || [];
-        if (callback) callback();
-      })
-      .catch(function () {
-        // 服务器不可用时退回 localStorage
-        var raw = localStorage.getItem('pw_manager_data');
-        if (raw) entries = JSON.parse(raw);
-        if (callback) callback();
-      });
-  } else {
+function tryMigrate(callback) {
+  var raw = localStorage.getItem('pw_manager_data');
+  if (raw) {
     try {
-      var raw = localStorage.getItem('pw_manager_data');
-      if (raw) entries = JSON.parse(raw);
+      entries = JSON.parse(raw);
+      dbSet('pw_manager_data', raw);
+      // 也迁移主密码哈希
+      var hash = localStorage.getItem('pw_master_hash');
+      if (hash) dbSet('pw_master_hash', hash);
     } catch (e) {
       entries = [];
     }
-    if (callback) callback();
+  } else {
+    entries = [];
   }
+  if (callback) callback();
 }
 
 function save() {
   var json = JSON.stringify(entries);
-  localStorage.setItem('pw_manager_data', json);
-  if (isServerMode()) {
-    fetch('/api/data', { method: 'POST', body: json }).catch(function () {});
-  }
+  dbSet('pw_manager_data', json).catch(function () {});
 }
 
 // ---- 渲染 ----
